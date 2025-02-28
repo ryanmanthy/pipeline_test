@@ -1,11 +1,16 @@
 FROM alpine:3.19 AS builder
 
-ENV KEYCLOAK_VERSION 999.0.0-SNAPSHOT
-ARG KEYCLOAK_DIST=https://github.com/keycloak/keycloak/releases/download/$KEYCLOAK_VERSION/keycloak-$KEYCLOAK_VERSION.tar.gz
+ENV KEYCLOAK_VERSION=999.0.0-SNAPSHOT
+ARG KEYCLOAK_DIST
 
-RUN apk add --no-cache tar gzip
+# Install required packages for downloading
+RUN apk add --no-cache tar gzip curl
 
-ADD $KEYCLOAK_DIST /tmp/keycloak/
+# Create directory for Keycloak
+RUN mkdir -p /tmp/keycloak
+
+# Download or copy Keycloak distribution
+ADD ${KEYCLOAK_DIST} /tmp/keycloak/
 
 # The next step makes it uniform for local development and upstream built.
 # If it is a local tar archive then it is unpacked, if from remote is just downloaded.
@@ -13,17 +18,18 @@ RUN (cd /tmp/keycloak && \
     tar -xvf /tmp/keycloak/keycloak-*.tar.gz && \
     rm /tmp/keycloak/keycloak-*.tar.gz) || true
 
-RUN mv /tmp/keycloak/keycloak-* /opt/keycloak && mkdir -p /opt/keycloak/data
+RUN mkdir -p /opt/keycloak/data
+RUN mv /tmp/keycloak/keycloak-* /opt/keycloak
 RUN chmod -R g+rwX /opt/keycloak
 
 FROM alpine:3.19
-ENV LANG en_US.UTF-8
+ENV LANG=en_US.UTF-8
 
 # Install required packages
 RUN apk add --no-cache openjdk21-jre-headless tzdata
 
 # Flag for determining app is running in container
-ENV KC_RUN_IN_CONTAINER true
+ENV KC_RUN_IN_CONTAINER=true
 
 COPY --from=builder --chown=1000:1000 /opt/keycloak /opt/keycloak
 
@@ -45,6 +51,7 @@ ARG KEYCLOAK_URL="https://www.keycloak.org/"
 ARG KEYCLOAK_TAGS="keycloak security identity"
 ARG KEYCLOAK_MAINTAINER=${KEYCLOAK_URL}
 ARG KEYCLOAK_VENDOR=${KEYCLOAK_MAINTAINER}
+ARG KEYCLOAK_DESCRIPTION="Keycloak - Open Source Identity and Access Management"
 
 LABEL maintainer=${KEYCLOAK_MAINTAINER} \
       vendor=${KEYCLOAK_VENDOR} \
