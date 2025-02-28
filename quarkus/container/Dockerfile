@@ -25,19 +25,24 @@ RUN chmod -R g+rwX /opt/keycloak
 FROM alpine:3.19
 ENV LANG=en_US.UTF-8
 
-# Install required packages
-RUN apk add --no-cache openjdk21-jre-headless tzdata
+# Install required packages and configure FIPS
+RUN apk update && \
+    apk upgrade && \
+    apk add openjdk17 && \
+    rm -rf /var/cache/apk/* && \
+    # Create directory and add FIPS provider to make SAML work: https://www.keycloak.org/server/fips
+    mkdir -p /etc/java-17-openjdk/security && \
+    echo "fips.provider.7=XMLDSig" >> /etc/java-17-openjdk/security/java.security && \
+    # User stuff
+    echo "keycloak:x:2000:root" >> /etc/group && \
+    echo "keycloak:x:2000:2000:keycloak user:/opt/keycloak:/sbin/nologin" >> /etc/passwd
 
 # Flag for determining app is running in container
 ENV KC_RUN_IN_CONTAINER=true
 
-COPY --from=builder --chown=1000:1000 /opt/keycloak /opt/keycloak
+COPY --from=builder --chown=2000:2000 /opt/keycloak /opt/keycloak
 
-# Create keycloak user and group
-RUN addgroup -g 1000 keycloak && \
-    adduser -u 1000 -G keycloak -h /opt/keycloak -D keycloak
-
-USER 1000
+USER 2000
 
 EXPOSE 8080
 EXPOSE 8443
