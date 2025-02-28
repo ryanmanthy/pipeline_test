@@ -52,8 +52,9 @@
         <jboss.snapshots.repo.id>jboss-snapshots-repository</jboss.snapshots.repo.id>
         <jboss.snapshots.repo.url>https://s01.oss.sonatype.org/content/repositories/snapshots/</jboss.snapshots.repo.url>
 
-        <quarkus.version>3.15.3</quarkus.version>
-        <quarkus.build.version>3.15.3</quarkus.build.version>
+        <quarkus.version>3.15.3.1</quarkus.version>
+        <quarkus.build.version>3.15.3.1</quarkus.build.version>
+        <netty.version>4.1.118.Final</netty.version>
 
         <project.build-time>${timestamp}</project.build-time>
 
@@ -304,6 +305,37 @@
     <dependencyManagement>
 
         <dependencies>
+            <!-- Keep Quarkus BOM first -->
+            <dependency>
+                <groupId>io.quarkus.platform</groupId>
+                <artifactId>quarkus-bom</artifactId>
+                <version>${quarkus.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
+            <!-- Explicitly override specific Netty artifacts that need updating -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http2</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-bom</artifactId>
@@ -320,6 +352,13 @@
                 <groupId>io.quarkus.platform</groupId>
                 <artifactId>quarkus-bom</artifactId>
                 <version>${quarkus.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -1298,6 +1337,34 @@
                 <artifactId>infinispan-core</artifactId>
                 <type>test-jar</type>
                 <version>${infinispan.version}</version>
+            </dependency>
+
+            <!-- Override Netty version -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-netty</artifactId>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-handler</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-codec-http</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-codec-http2</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
         </dependencies>
