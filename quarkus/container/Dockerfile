@@ -1,9 +1,9 @@
-FROM registry.access.redhat.com/ubi9 AS ubi-micro-build
+FROM alpine:latest AS alpine-build
 
 ENV KEYCLOAK_VERSION 999.0.0-SNAPSHOT
 ARG KEYCLOAK_DIST=https://github.com/keycloak/keycloak/releases/download/$KEYCLOAK_VERSION/keycloak-$KEYCLOAK_VERSION.tar.gz
 
-RUN dnf install -y tar gzip
+RUN apk add --no-cache tar gzip
 
 ADD $KEYCLOAK_DIST /tmp/keycloak/
 
@@ -16,20 +16,20 @@ RUN (cd /tmp/keycloak && \
 RUN mv /tmp/keycloak/keycloak-* /opt/keycloak && mkdir -p /opt/keycloak/data
 RUN chmod -R g+rwX /opt/keycloak
 
-ADD ubi-null.sh /tmp/
-RUN bash /tmp/ubi-null.sh java-21-openjdk-headless glibc-langpack-en findutils
+RUN apk add --no-cache openjdk17-jre-headless tzdata
 
-FROM registry.access.redhat.com/ubi9-micro
+FROM alpine:latest
 ENV LANG en_US.UTF-8
 
 # Flag for determining app is running in container
 ENV KC_RUN_IN_CONTAINER true
 
-COPY --from=ubi-micro-build /tmp/null/rootfs/ /
-COPY --from=ubi-micro-build --chown=1000:0 /opt/keycloak /opt/keycloak
+COPY --from=alpine-build --chown=1000:0 /opt/keycloak /opt/keycloak
+COPY --from=alpine-build /usr/lib/jvm /usr/lib/jvm
 
-RUN echo "keycloak:x:0:root" >> /etc/group && \
-    echo "keycloak:x:1000:0:keycloak user:/opt/keycloak:/sbin/nologin" >> /etc/passwd
+RUN apk add --no-cache bash findutils tzdata && \
+    addgroup -g 0 keycloak && \
+    adduser -u 1000 -G keycloak -D -h /opt/keycloak keycloak
 
 USER 1000
 

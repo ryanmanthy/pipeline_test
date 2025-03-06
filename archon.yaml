@@ -63,17 +63,12 @@ build:
 # Monorepo Docker Environments
 # Define multiple Docker environments for different services in the monorepo.
 docker_environments:
-  service1:
-    context: "services/service1/"           # Build context for service1
-    dockerfile: "services/service1/Dockerfile" # Location of service1's Dockerfile
-    image_tag: "examplemonorepo/service1:latest"
+  keycloak-quarkus:
+    context: "."                                # Build context from root
+    dockerfile: "quarkus/container/Dockerfile"  # Location of Keycloak Quarkus Dockerfile
+    image_tag: "keycloak/keycloak:latest"
     build_args:
-      BASE_IMAGE: "python:3.9-slim"
-      ENV: "production"
-  service2:
-    context: "services/service2/"           # Build context for service2
-    dockerfile: "services/service2/Dockerfile" # Location of service2's Dockerfile
-    image_tag: "examplemonorepo/service2:latest"
-    build_args:
-      BASE_IMAGE: "node:14-alpine" # Default base image is alpine. The image should be signed by a trusted authority.
+      BASE_IMAGE: "alpine:latest"
+      KEYCLOAK_VERSION: "${project.version}"
+      JAVA_PACKAGE: "java-17-openjdk-headless"
       ENV: "production"
