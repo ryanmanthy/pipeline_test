@@ -1,6 +1,6 @@
 FROM alpine:latest AS alpine-build
 
-ENV KEYCLOAK_VERSION 999.0.0-SNAPSHOT
+ENV KEYCLOAK_VERSION=999.0.0-SNAPSHOT
 ARG KEYCLOAK_DIST=https://github.com/keycloak/keycloak/releases/download/$KEYCLOAK_VERSION/keycloak-$KEYCLOAK_VERSION.tar.gz
 
 RUN apk add --no-cache tar gzip
@@ -19,16 +19,16 @@ RUN chmod -R g+rwX /opt/keycloak
 RUN apk add --no-cache openjdk17-jre-headless tzdata
 
 FROM alpine:latest
-ENV LANG en_US.UTF-8
+ENV LANG=en_US.UTF-8
 
 # Flag for determining app is running in container
-ENV KC_RUN_IN_CONTAINER true
+ENV KC_RUN_IN_CONTAINER=true
 
-COPY --from=alpine-build --chown=1000:0 /opt/keycloak /opt/keycloak
+COPY --from=alpine-build --chown=1000:1000 /opt/keycloak /opt/keycloak
 COPY --from=alpine-build /usr/lib/jvm /usr/lib/jvm
 
 RUN apk add --no-cache bash findutils tzdata && \
-    addgroup -g 0 keycloak && \
+    addgroup -g 1000 keycloak && \
     adduser -u 1000 -G keycloak -D -h /opt/keycloak keycloak
 
 USER 1000
@@ -75,5 +75,5 @@ ARG KEYCLOAK_DOCS=${KEYCLOAK_URL}documentation
 LABEL org.opencontainers.image.title=${KEYCLOAK_SERVER_DISPLAY_NAME} \
       org.opencontainers.image.url=${KEYCLOAK_URL} \
       org.opencontainers.image.source=${KEYCLOAK_SOURCE} \
-      org.opencontainers.image.description=${KEYCLOAK_DESCRIPTION} \
+      org.opencontainers.image.description=${KEYCLOAK_SERVER_DESCRIPTION} \
       org.opencontainers.image.documentation=${KEYCLOAK_DOCS}

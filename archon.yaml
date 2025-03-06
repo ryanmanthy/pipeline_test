@@ -1,9 +1,13 @@
 # archon.yaml
 
+# Define version as a variable for easier management
+variables:
+  KEYCLOAK_VERSION: "999.0.0-SNAPSHOT"
+
 # Project Metadata
 project:
   name: "Keycloak Example"
-  version: "999.0.0-SNAPSHOT"  # Updated to match current Keycloak version
+  version: "${KEYCLOAK_VERSION}"  # Using version variable
   description: "The purpose of this project is to provide an example of how to deploy Keycloak using Archon Cloud."
   maintainers:
     - name: "Ryan Manthy"
@@ -21,12 +25,13 @@ paths:
 dependencies:
   type: "maven"
   file: "pom.xml"
-  # Updated dependency installation commands based on Quarkus README
+  # Updated dependency installation commands based on provided build steps
   install_commands:
-    # First build the main codebase to populate local maven cache
-    - "./mvnw -f pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
-    # Then build the Quarkus distribution
-    - "./mvnw -f quarkus/pom.xml clean install -DskipTests"
+    - "./mvnw -f dist/pom.xml clean install"
+    - "cd quarkus"
+    - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+    - "../mvnw clean install -DskipTests"
+    - "cd .."
 
 # Environment Settings
 environment:
@@ -75,18 +80,18 @@ environment:
         # Additional test-specific variables
         KEYCLOAK_TEST_TIMEOUT: "300"
 
-# Build Instructions (can be overridden in individual services if required)
+# Build Instructions (updated based on provided commands)
 build:
   pre_build:
     - "echo 'Starting build process...'"
     - "mkdir -p .kc"  # Ensure home directory exists
   build:
-    # Build the main codebase first to populate local maven cache
-    - "./mvnw -f pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
-    # Build the quarkus distribution
-    - "./mvnw -f quarkus/pom.xml clean install -DskipTests"
-    # Alternative: Build only the distribution artifacts
-    # - "./mvnw -f quarkus/dist/pom.xml clean install"
+    # Updated build commands based on provided steps
+    - "./mvnw -f dist/pom.xml clean install"
+    - "cd quarkus"
+    - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+    - "../mvnw clean install -DskipTests"
+    - "cd .."
   run:
     # Command to run Keycloak in development mode
     - "java -jar quarkus/server/target/lib/quarkus-run.jar start-dev"
@@ -111,22 +116,24 @@ docker_environments:
   keycloak-quarkus:
     context: "quarkus/container"    # Build context from container directory
     dockerfile: "Dockerfile"        # Location of Keycloak Quarkus Dockerfile
-    image_tag: "keycloak/keycloak:999.0.0-SNAPSHOT"  # Updated to match version
+    image_tag: "keycloak-demo:${KEYCLOAK_VERSION}"  # Using version variable
     build_args:
-      KEYCLOAK_DIST: "keycloak-999.0.0-SNAPSHOT.tar.gz"  # Updated to match version
-      KEYCLOAK_VERSION: "999.0.0-SNAPSHOT"  # Added explicit version arg
-    # Instructions for building the container image based on README
+      KEYCLOAK_DIST: "keycloak-${KEYCLOAK_VERSION}.tar.gz"  # Using version variable
+    # Instructions for building the container image based on provided commands
     build_instructions:
-      # First ensure the distribution is built
-      - "./mvnw -f pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
-      - "./mvnw -f quarkus/pom.xml clean install -DskipTests"
+      # First build the distribution
+      - "./mvnw -f dist/pom.xml clean install"
+      - "cd quarkus"
+      - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+      - "../mvnw clean install -DskipTests"
+      - "cd .."
       # Copy the distribution tar.gz to the container directory
-      - "cp quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz quarkus/container/"
+      - "cp quarkus/dist/target/keycloak-${KEYCLOAK_VERSION}.tar.gz quarkus/container/"
       # Build the Docker image
-      - "cd quarkus/container && docker build --build-arg KEYCLOAK_DIST=keycloak-999.0.0-SNAPSHOT.tar.gz --build-arg KEYCLOAK_VERSION=999.0.0-SNAPSHOT -t keycloak/keycloak:999.0.0-SNAPSHOT ."
+      - "cd quarkus/container && docker build --build-arg KEYCLOAK_DIST=keycloak-${KEYCLOAK_VERSION}.tar.gz -t keycloak-demo ."
     # Added container run commands
     run_commands:
       # Development mode with HTTP enabled
-      development: "docker run -p 8080:8080 -p 8443:8443 -e KC_DB=dev-file -e KC_HTTP_ENABLED=true -e KC_HEALTH_ENABLED=true -e KC_METRICS_ENABLED=true -e KC_FEATURES=preview keycloak/keycloak:999.0.0-SNAPSHOT start-dev"
+      development: "docker run -p 8080:8080 -p 8443:8443 -e KC_DB=dev-file -e KC_HTTP_ENABLED=true -e KC_HEALTH_ENABLED=true -e KC_METRICS_ENABLED=true -e KC_FEATURES=preview keycloak-demo start-dev"
       # Production mode with proper settings
-      production: "docker run -p 8443:8443 -e KC_DB=postgres -e KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak -e KC_DB_USERNAME=keycloak -e KC_DB_PASSWORD=password -e KC_HOSTNAME=localhost -e KC_HTTPS_REQUIRED=all keycloak/keycloak:999.0.0-SNAPSHOT start"
+      production: "docker run -p 8443:8443 -e KC_DB=postgres -e KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak -e KC_DB_USERNAME=keycloak -e KC_DB_PASSWORD=password -e KC_HOSTNAME=localhost -e KC_HTTPS_REQUIRED=all keycloak-demo start"
