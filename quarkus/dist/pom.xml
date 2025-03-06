@@ -56,7 +56,7 @@
                 <executions>
                     <execution>
                         <id>unpack-cli</id>
-                        <phase>validate</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>unpack</goal>
                         </goals>
