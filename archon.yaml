@@ -14,14 +14,19 @@ project:
 paths:
   source: "src/"                    # General source directory
   tests: "tests/"                   # Test suite directory
-  output: "*/target/"                   # Build artifacts output directory
-  vendor: "*/vendor"                 # Vendor or dependency cache directory
+  output: "*/target/"               # Build artifacts output directory
+  vendor: "*/vendor"                # Vendor or dependency cache directory
 
 # Dependency Management (global or per-service can be defined separately if needed)
 dependencies:
   type: "maven"
   file: "pom.xml"
-  install_command: "./mvnw clean install -DskipTests"
+  # Updated dependency installation commands based on Quarkus README
+  install_commands:
+    # First build the main codebase to populate local maven cache
+    - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+    # Then build the Quarkus distribution
+    - "../mvnw clean install -DskipTests"
 
 # Environment Settings
 environment:
@@ -35,6 +40,8 @@ environment:
     KC_HTTPS_PORT: "8443"
     KC_PROXY: "edge"
     KC_LOG_LEVEL: "info"
+    # Added home directory for keeping state between startups
+    KC_HOME_DIR: ".kc"
   profiles:
     development:
       variables:
@@ -55,8 +62,15 @@ build:
   pre_build:
     - "echo 'Starting build process...'"
   build:
-    - "./mvnw clean install -Pdistribution"
+    # Updated build commands based on Quarkus README
+    - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+    - "../mvnw -f quarkus/dist/pom.xml clean install"
+  run:
+    # Command to run Keycloak in development mode
     - "java -jar quarkus/server/target/lib/quarkus-run.jar start-dev"
+  dev_mode:
+    # Command to run Keycloak in Quarkus development mode with debugging
+    - "../mvnw -f quarkus/server/pom.xml compile quarkus:dev -Dquarkus.args='start-dev'"
   post_build:
     - "echo 'Build process completed.'"
 
@@ -72,3 +86,7 @@ docker_environments:
       KEYCLOAK_VERSION: "${project.version}"
       JAVA_PACKAGE: "java-17-openjdk-headless"
       ENV: "production"
+    # Added instructions for building the container image based on README
+    build_instructions:
+      - "cp quarkus/dist/target/keycloak-${project.version}.tar.gz quarkus/container/"
+      - "docker build --build-arg KEYCLOAK_DIST=keycloak-${project.version}.tar.gz -t keycloak/keycloak:latest quarkus/container/"
