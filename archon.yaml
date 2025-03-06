@@ -27,7 +27,7 @@ dependencies:
   file: "pom.xml"
   # Updated dependency installation commands based on provided build steps
   install_commands:
-    - "./mvnw -f dist/pom.xml clean install"
+    - "./mvnw -f quarkus/dist/pom.xml clean install"
     - "cd quarkus"
     - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
     - "../mvnw clean install -DskipTests"
@@ -87,7 +87,7 @@ build:
     - "mkdir -p .kc"  # Ensure home directory exists
   build:
     # Updated build commands based on provided steps
-    - "./mvnw -f dist/pom.xml clean install"
+    - "./mvnw -f quarkus/dist/pom.xml clean install"
     - "cd quarkus"
     - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
     - "../mvnw clean install -DskipTests"
@@ -122,7 +122,7 @@ docker_environments:
     # Instructions for building the container image based on provided commands
     build_instructions:
       # First build the distribution
-      - "./mvnw -f dist/pom.xml clean install"
+      - "./mvnw -f quarkus/dist/pom.xml clean install"
       - "cd quarkus"
       - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
       - "../mvnw clean install -DskipTests"
