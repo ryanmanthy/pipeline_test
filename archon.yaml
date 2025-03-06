@@ -42,6 +42,13 @@ environment:
     KC_LOG_LEVEL: "info"
     # Added home directory for keeping state between startups
     KC_HOME_DIR: ".kc"
+    # Configure logging before any Java classes are loaded
+    _JAVA_OPTIONS: "-Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+    MAVEN_OPTS: "-Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+    JAVA_OPTS: "-Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djava.util.concurrent.ForkJoinPool.common.threadFactory=io.quarkus.bootstrap.forkjoin.QuarkusForkJoinWorkerThreadFactory"
+    # XPath configuration for advanced XPath features
+    JAVAX_XML_XPATH_XPATHFACTORYIMPL: "net.sf.saxon.xpath.XPathFactoryImpl"
+    JAVAX_XML_TRANSFORM_TRANSFORMERFACTORYIMPL: "net.sf.saxon.TransformerFactoryImpl"
   profiles:
     development:
       variables:
@@ -56,6 +63,14 @@ environment:
         KC_CACHE_STACK: "kubernetes"
         KC_HEALTH_ENABLED: "true"
         KC_METRICS_ENABLED: "true"
+    testing:
+      variables:
+        KC_LOG_LEVEL: "debug"
+        KC_HEALTH_ENABLED: "true"
+        KC_METRICS_ENABLED: "true"
+        KC_FEATURES: "preview"
+        # Additional test-specific variables
+        KEYCLOAK_TEST_TIMEOUT: "300"
 
 # Build Instructions (can be overridden in individual services if required)
 build:
@@ -71,6 +86,10 @@ build:
   dev_mode:
     # Command to run Keycloak in Quarkus development mode with debugging
     - "../mvnw -f quarkus/server/pom.xml compile quarkus:dev -Dquarkus.args='start-dev'"
+  test:
+    # Commands to run tests with proper configuration without modifying source code
+    - "../mvnw -f test-framework/pom.xml clean install -DskipTests"
+    - "../mvnw -f test-framework/examples/pom.xml test -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djava.util.concurrent.ForkJoinPool.common.threadFactory=io.quarkus.bootstrap.forkjoin.QuarkusForkJoinWorkerThreadFactory -Djavax.xml.xpath.XPathFactory:http://java.sun.com/jaxp/xpath/dom=net.sf.saxon.xpath.XPathFactoryImpl"
   post_build:
     - "echo 'Build process completed.'"
 
