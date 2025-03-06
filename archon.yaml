@@ -3,7 +3,7 @@
 # Project Metadata
 project:
   name: "Keycloak Example"
-  version: "0.0.1"
+  version: "999.0.0-SNAPSHOT"  # Updated to match current Keycloak version
   description: "The purpose of this project is to provide an example of how to deploy Keycloak using Archon Cloud."
   maintainers:
     - name: "Ryan Manthy"
@@ -24,7 +24,7 @@ dependencies:
   # Updated dependency installation commands based on Quarkus README
   install_commands:
     # First build the main codebase to populate local maven cache
-    - "./mvnw clean install -DskipTestsuite -DskipExamples -DskipTests"
+    - "./mvnw -f pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
     # Then build the Quarkus distribution
     - "./mvnw -f quarkus/pom.xml clean install -DskipTests"
 
@@ -53,6 +53,9 @@ environment:
         KC_HEALTH_ENABLED: "true"
         KC_METRICS_ENABLED: "true"
         KC_FEATURES: "preview"
+        # Development-specific settings
+        KC_DB: "dev-file"  # Use file-based DB for development
+        KC_HTTP_ENABLED: "true"  # Enable HTTP for development
     production:
       variables:
         KC_LOG_LEVEL: "warn"
@@ -60,12 +63,15 @@ environment:
         KC_CACHE_STACK: "kubernetes"
         KC_HEALTH_ENABLED: "true"
         KC_METRICS_ENABLED: "true"
+        KC_HTTP_ENABLED: "false"  # Disable HTTP in production
+        KC_HTTPS_REQUIRED: "all"  # Require HTTPS in production
     testing:
       variables:
         KC_LOG_LEVEL: "debug"
         KC_HEALTH_ENABLED: "true"
         KC_METRICS_ENABLED: "true"
         KC_FEATURES: "preview"
+        KC_HTTP_ENABLED: "true"  # Enable HTTP for testing
         # Additional test-specific variables
         KEYCLOAK_TEST_TIMEOUT: "300"
 
@@ -73,26 +79,29 @@ environment:
 build:
   pre_build:
     - "echo 'Starting build process...'"
+    - "mkdir -p .kc"  # Ensure home directory exists
   build:
-    # Build the parent project first
-    - "./mvnw clean install -DskipTestsuite -DskipExamples -DskipTests"
-    # Build the quarkus parent module
+    # Build the main codebase first to populate local maven cache
+    - "./mvnw -f pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+    # Build the quarkus distribution
     - "./mvnw -f quarkus/pom.xml clean install -DskipTests"
-    # Build the server module
-    - "./mvnw -f quarkus/server/pom.xml clean install -DskipTests"
-    # Build the distribution
-    - "./mvnw -f quarkus/dist/pom.xml clean install -DskipTests"
+    # Alternative: Build only the distribution artifacts
+    # - "./mvnw -f quarkus/dist/pom.xml clean install"
   run:
     # Command to run Keycloak in development mode
     - "java -jar quarkus/server/target/lib/quarkus-run.jar start-dev"
   dev_mode:
     # Command to run Keycloak in Quarkus development mode with debugging
     - "./mvnw -f quarkus/server/pom.xml compile quarkus:dev -Dquarkus.args='start-dev'"
+    # Alternative with debugging suspended
+    # - "./mvnw -f quarkus/server/pom.xml -Dsuspend=true compile quarkus:dev -Dquarkus.args='start-dev'"
   test:
-    # Commands to run tests with proper configuration without modifying source code
-    - "./mvnw clean install -DskipTestsuite -DskipExamples -DskipTests"
-    - "./mvnw -f test-framework/pom.xml clean install -DskipTests"
-    - "./mvnw -f test-framework/examples/pom.xml test -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djava.util.concurrent.ForkJoinPool.common.threadFactory=io.quarkus.bootstrap.forkjoin.QuarkusForkJoinWorkerThreadFactory"
+    # Run CLI tests
+    - "./mvnw -f quarkus/tests/pom.xml test"
+    # Run distribution tests
+    - "./mvnw -f quarkus/tests/pom.xml test -Dkc.quarkus.tests.dist=docker"
+    # Run database tests (example for PostgreSQL)
+    # - "./mvnw -f quarkus/tests/pom.xml clean install -Dkc.test.storage.database=true -Dtest=PostgreSQLDistTest"
   post_build:
     - "echo 'Build process completed.'"
 
@@ -100,15 +109,24 @@ build:
 # Define multiple Docker environments for different services in the monorepo.
 docker_environments:
   keycloak-quarkus:
-    context: "."                                # Build context from root
-    dockerfile: "quarkus/container/Dockerfile"  # Location of Keycloak Quarkus Dockerfile
-    image_tag: "keycloak/keycloak:latest"
+    context: "quarkus/container"    # Build context from container directory
+    dockerfile: "Dockerfile"        # Location of Keycloak Quarkus Dockerfile
+    image_tag: "keycloak/keycloak:999.0.0-SNAPSHOT"  # Updated to match version
     build_args:
-      BASE_IMAGE: "alpine:latest"
-      KEYCLOAK_VERSION: "${project.version}"
-      JAVA_PACKAGE: "java-17-openjdk-headless"
-      ENV: "production"
-    # Added instructions for building the container image based on README
+      KEYCLOAK_DIST: "keycloak-999.0.0-SNAPSHOT.tar.gz"  # Updated to match version
+      KEYCLOAK_VERSION: "999.0.0-SNAPSHOT"  # Added explicit version arg
+    # Instructions for building the container image based on README
     build_instructions:
-      - "cp quarkus/dist/target/keycloak-*.tar.gz quarkus/container/"
-      - "cd quarkus/container && docker build --build-arg KEYCLOAK_DIST=$(ls keycloak-*.tar.gz) -t keycloak/keycloak:latest ."
+      # First ensure the distribution is built
+      - "./mvnw -f pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+      - "./mvnw -f quarkus/pom.xml clean install -DskipTests"
+      # Copy the distribution tar.gz to the container directory
+      - "cp quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz quarkus/container/"
+      # Build the Docker image
+      - "cd quarkus/container && docker build --build-arg KEYCLOAK_DIST=keycloak-999.0.0-SNAPSHOT.tar.gz --build-arg KEYCLOAK_VERSION=999.0.0-SNAPSHOT -t keycloak/keycloak:999.0.0-SNAPSHOT ."
+    # Added container run commands
+    run_commands:
+      # Development mode with HTTP enabled
+      development: "docker run -p 8080:8080 -p 8443:8443 -e KC_DB=dev-file -e KC_HTTP_ENABLED=true -e KC_HEALTH_ENABLED=true -e KC_METRICS_ENABLED=true -e KC_FEATURES=preview keycloak/keycloak:999.0.0-SNAPSHOT start-dev"
+      # Production mode with proper settings
+      production: "docker run -p 8443:8443 -e KC_DB=postgres -e KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak -e KC_DB_USERNAME=keycloak -e KC_DB_PASSWORD=password -e KC_HOSTNAME=localhost -e KC_HTTPS_REQUIRED=all keycloak/keycloak:999.0.0-SNAPSHOT start"
