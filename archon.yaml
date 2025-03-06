@@ -46,9 +46,6 @@ environment:
     _JAVA_OPTIONS: "-Djava.util.logging.manager=org.jboss.logmanager.LogManager"
     MAVEN_OPTS: "-Djava.util.logging.manager=org.jboss.logmanager.LogManager"
     JAVA_OPTS: "-Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djava.util.concurrent.ForkJoinPool.common.threadFactory=io.quarkus.bootstrap.forkjoin.QuarkusForkJoinWorkerThreadFactory"
-    # XPath configuration for advanced XPath features
-    JAVAX_XML_XPATH_XPATHFACTORYIMPL: "net.sf.saxon.xpath.XPathFactoryImpl"
-    JAVAX_XML_TRANSFORM_TRANSFORMERFACTORYIMPL: "net.sf.saxon.TransformerFactoryImpl"
   profiles:
     development:
       variables:
@@ -89,7 +86,7 @@ build:
   test:
     # Commands to run tests with proper configuration without modifying source code
     - "../mvnw -f test-framework/pom.xml clean install -DskipTests"
-    - "../mvnw -f test-framework/examples/pom.xml test -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djava.util.concurrent.ForkJoinPool.common.threadFactory=io.quarkus.bootstrap.forkjoin.QuarkusForkJoinWorkerThreadFactory -Djavax.xml.xpath.XPathFactory:http://java.sun.com/jaxp/xpath/dom=net.sf.saxon.xpath.XPathFactoryImpl"
+    - "../mvnw -f test-framework/examples/pom.xml test -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djava.util.concurrent.ForkJoinPool.common.threadFactory=io.quarkus.bootstrap.forkjoin.QuarkusForkJoinWorkerThreadFactory"
   post_build:
     - "echo 'Build process completed.'"
 
