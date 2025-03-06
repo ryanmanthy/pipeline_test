@@ -1,0 +1,79 @@
+# archon.yaml
+
+# Project Metadata
+project:
+  name: "Keycloak Example"
+  version: "0.0.1"
+  description: "The purpose of this project is to provide an example of how to deploy Keycloak using Archon Cloud."
+  maintainers:
+    - name: "Ryan Manthy"
+      email: "ryan@archon.inc"
+  license: "Copyright 2025 Archon Technologies Inc. All rights reserved."
+
+# Paths Configuration
+paths:
+  source: "src/"                    # General source directory
+  tests: "tests/"                   # Test suite directory
+  output: "*/target/"                   # Build artifacts output directory
+  vendor: "*/vendor"                 # Vendor or dependency cache directory
+
+# Dependency Management (global or per-service can be defined separately if needed)
+dependencies:
+  type: "maven"
+  file: "pom.xml"
+  install_command: "./mvnw clean install -DskipTests"
+
+# Environment Settings
+environment:
+  variables:
+    KC_DB: "postgres"
+    KC_DB_URL: "jdbc:postgresql://localhost:5432/keycloak"
+    KC_DB_USERNAME: "keycloak"
+    KC_DB_PASSWORD: "password"
+    KC_HOSTNAME: "localhost"
+    KC_HTTP_PORT: "8080"
+    KC_HTTPS_PORT: "8443"
+    KC_PROXY: "edge"
+    KC_LOG_LEVEL: "info"
+  profiles:
+    development:
+      variables:
+        KC_LOG_LEVEL: "debug"
+        KC_HEALTH_ENABLED: "true"
+        KC_METRICS_ENABLED: "true"
+        KC_FEATURES: "preview"
+    production:
+      variables:
+        KC_LOG_LEVEL: "warn"
+        KC_CACHE: "ispn"
+        KC_CACHE_STACK: "kubernetes"
+        KC_HEALTH_ENABLED: "true"
+        KC_METRICS_ENABLED: "true"
+
+# Build Instructions (can be overridden in individual services if required)
+build:
+  pre_build:
+    - "echo 'Starting build process...'"
+  build:
+    - "./mvnw clean install -Pdistribution"
+    - "java -jar quarkus/server/target/lib/quarkus-run.jar start-dev"
+  post_build:
+    - "echo 'Build process completed.'"
+
+# Monorepo Docker Environments
+# Define multiple Docker environments for different services in the monorepo.
+docker_environments:
+  service1:
+    context: "services/service1/"           # Build context for service1
+    dockerfile: "services/service1/Dockerfile" # Location of service1's Dockerfile
+    image_tag: "examplemonorepo/service1:latest"
+    build_args:
+      BASE_IMAGE: "python:3.9-slim"
+      ENV: "production"
+  service2:
+    context: "services/service2/"           # Build context for service2
+    dockerfile: "services/service2/Dockerfile" # Location of service2's Dockerfile
+    image_tag: "examplemonorepo/service2:latest"
+    build_args:
+      BASE_IMAGE: "node:14-alpine" # Default base image is alpine. The image should be signed by a trusted authority.
+      ENV: "production"
