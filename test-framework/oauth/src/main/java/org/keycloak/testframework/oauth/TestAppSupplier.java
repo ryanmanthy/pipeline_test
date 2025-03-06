@@ -9,6 +9,11 @@ import org.keycloak.testframework.oauth.annotations.InjectTestApp;
 public class TestAppSupplier implements Supplier<TestApp, InjectTestApp> {
 
     @Override
+    public Class<TestApp> getValueType() {
+        return TestApp.class;
+    }
+
+    @Override
     public TestApp getValue(InstanceContext<TestApp, InjectTestApp> instanceContext) {
         HttpServer httpServer = instanceContext.getDependency(HttpServer.class);
         return new TestApp(httpServer);

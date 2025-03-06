@@ -19,6 +19,11 @@ import org.openqa.selenium.WebDriver;
 public class OAuthClientSupplier implements Supplier<OAuthClient, InjectOAuthClient> {
 
     @Override
+    public Class<OAuthClient> getValueType() {
+        return OAuthClient.class;
+    }
+
+    @Override
     public OAuthClient getValue(InstanceContext<OAuthClient, InjectOAuthClient> instanceContext) {
         InjectOAuthClient annotation = instanceContext.getAnnotation();
 
