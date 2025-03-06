@@ -29,9 +29,9 @@ dependencies:
   install_commands:
     - "./mvnw -f quarkus/dist/pom.xml clean install"
     - "cd quarkus"
-    - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
-    - "../mvnw clean install -DskipTests"
-    - "cd .."
+    - "./mvnw -f ./pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+    - "./mvnw clean install -DskipTests"
+    - "cd ."
 
 # Environment Settings
 environment:
@@ -83,15 +83,15 @@ environment:
 # Build Instructions (updated based on provided commands)
 build:
   pre_build:
-    - "echo 'Starting build process...'"
+    - "echo 'Starting build process.'"
     - "mkdir -p .kc"  # Ensure home directory exists
   build:
     # Updated build commands based on provided steps
     - "./mvnw -f quarkus/dist/pom.xml clean install"
     - "cd quarkus"
-    - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
-    - "../mvnw clean install -DskipTests"
-    - "cd .."
+    - "./mvnw -f ./pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+    - "./mvnw clean install -DskipTests"
+    - "cd ."
   run:
     # Command to run Keycloak in development mode
     - "java -jar quarkus/server/target/lib/quarkus-run.jar start-dev"
@@ -124,9 +124,9 @@ docker_environments:
       # First build the distribution
       - "./mvnw -f quarkus/dist/pom.xml clean install"
       - "cd quarkus"
-      - "../mvnw -f ../pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
-      - "../mvnw clean install -DskipTests"
-      - "cd .."
+      - "./mvnw -f ./pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
+      - "./mvnw clean install -DskipTests"
+      - "cd ."
       # Copy the distribution tar.gz to the container directory
       - "cp quarkus/dist/target/keycloak-${KEYCLOAK_VERSION}.tar.gz quarkus/container/"
       # Build the Docker image
