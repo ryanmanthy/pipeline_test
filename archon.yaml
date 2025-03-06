@@ -116,9 +116,9 @@ docker_environments:
   keycloak-quarkus:
     context: "quarkus/container"    # Build context from container directory
     dockerfile: "Dockerfile"        # Location of Keycloak Quarkus Dockerfile
-    image_tag: "keycloak-demo:${KEYCLOAK_VERSION}"  # Using version variable
+    image_tag: "keycloak-demo:999.0.0-SNAPSHOT"  # Using hardcoded version
     build_args:
-      KEYCLOAK_DIST: "keycloak-${KEYCLOAK_VERSION}.tar.gz"  # Using version variable
+      KEYCLOAK_DIST: "keycloak-999.0.0-SNAPSHOT.tar.gz"  # Using hardcoded version
     # Instructions for building the container image based on provided commands
     build_instructions:
       # First build the distribution
@@ -128,9 +128,9 @@ docker_environments:
       - "./mvnw clean install -DskipTests"
       - "cd ."
       # Copy the distribution tar.gz to the container directory
-      - "cp quarkus/dist/target/keycloak-${KEYCLOAK_VERSION}.tar.gz quarkus/container/"
+      - "cp quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz quarkus/container/"
       # Build the Docker image
-      - "cd quarkus/container && docker build --build-arg KEYCLOAK_DIST=keycloak-${KEYCLOAK_VERSION}.tar.gz -t keycloak-demo ."
+      - "cd quarkus/container && docker build --build-arg KEYCLOAK_DIST=keycloak-999.0.0-SNAPSHOT.tar.gz -t keycloak-demo ."
     # Added container run commands
     run_commands:
       # Development mode with HTTP enabled
