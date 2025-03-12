@@ -1,7 +1,2 @@
 #!/bin/bash
-set -e
-./mvnw -f dist/pom.xml clean install
-cd quarkus
-./mvnw -f ./pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests
-./mvnw clean install -DskipTests
-cd ..
+cp quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz .
