@@ -1,6 +1,7 @@
 global:
   name: "keycloak-sample-app"
   prebuild: ".archon/prebuild.sh"
+  build: ".archon/build.sh"
 deployments:
   - name: "keycloak-main"
     tag: "test-21.0-archon"
@@ -8,13 +9,6 @@ deployments:
       This is the main Keycloak deployment.
     working-directory: "./main"
     prebuild: "prebuild.sh"
-    postbuild: "postbuild.sh"
-    build_scripts:
-      - "./mvnw -f dist/pom.xml clean install"
-      - "cd quarkus"
-      - "./mvnw -f ./pom.xml clean install -DskipTestsuite -DskipExamples -DskipTests"
-      - "./mvnw clean install -DskipTests"
-      - "cd .."
     build:
       dockerfile: "Dockerfile"
       args:
