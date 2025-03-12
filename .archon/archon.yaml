@@ -7,7 +7,7 @@ deployments:
     tag: "test-21.0-archon"
     description: |-
       This is the main Keycloak deployment.
-    working-directory: "./main"
+    working-directory: "./quarkus/container"
     prebuild: "prebuild.sh"
     build:
       dockerfile: "Dockerfile"
