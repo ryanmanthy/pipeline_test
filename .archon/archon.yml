@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../src/config-schema/archon-yaml-schema.json
+global:
+  name: "keyloak"
+  prebuild: ".archon/prebuild.sh"
+deployments:
+  - name: "keycloak-app"
+    tag: "test-21.0-archon"
+    description: |-
+      Downloading Keycloak
+    working-directory: "/quarkus/container"
+    build:
+      dockerfile: "Dockerfile"
+      args:
+        ARGUMENT:  KEYCLOAK_DIST=keycloak-999.0.0-SNAPSHOT.tar.gz
+    characteristics:
+      fips:
+        enabled: false
+        description: |-
+          FIPS mode is not enabled for this deployment.

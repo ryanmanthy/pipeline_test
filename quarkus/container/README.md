@@ -9,5 +9,5 @@ It is possible to download the Keycloak distribution from a URL:
 
 Alternatively, you need to build the local distribution first, then copy the distributions tar package in the `container` folder and point the build command to use the image:
 
-    cp $KEYCLOAK_SOURCE/quarkus/dist/target/keycloak-<VERSION>.tar.gz .
-    docker build --build-arg KEYCLOAK_DIST=keycloak-<VERSION>.tar.gz -t <YOUR_TAG> .
+    cp /quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz .
+    docker build --build-arg KEYCLOAK_DIST=keycloak-999.0.0-SNAPSHOT.tar.gz -t keycloak-archon-cloud .
