@@ -1,7 +1,7 @@
 FROM alpine:latest AS alpine-build
 
 ENV KEYCLOAK_VERSION=999.0.0-SNAPSHOT
-ARG KEYCLOAK_DIST=https://github.com/keycloak/keycloak/releases/download/$KEYCLOAK_VERSION/keycloak-$KEYCLOAK_VERSION.tar.gz
+ARG KEYCLOAK_DIST=keycloak-999.0.0-SNAPSHOT.tar.gz
 
 RUN apk add --no-cache tar gzip
 
